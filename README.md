@@ -319,3 +319,49 @@ whisper audio.mp3 --model small --device cuda
 ```
 
 Deberías ver que usa la GPU (`cuda`) y el proceso será **muy rápido** comparado con CPU.
+
+<br/>
+
+## [1.3. Definición del Servicio systemd](https://learn.microsoft.com/en-us/troubleshoot/developer/webapps/aspnetcore/practice-troubleshoot-linux/2-3-configure-aspnet-core-application-start-automatically#sample-service-file-for-aspnet-core-applications)
+
+Debes crear un archivo de unidad de servicio llamado `whisper_daemon.service` en el directorio `/etc/systemd/system/`.
+
+**Archivo:** `/etc/systemd/system/whisper_daemon.service`
+```ini, toml
+
+[Unit]
+# Descripción legible del servicio
+Description=Whisper RabbitMQ Consumer Daemon
+# Asegura que el servicio se inicie DESPUÉS de que la red y RabbitMQ estén disponibles
+After=network.target rabbitmq-server.service
+
+[Service]
+# USUARIO CLAVE: Ejecuta el proceso con el usuario de bajo privilegio
+User=whisperuser
+Group=whisperuser
+
+# Directorio de trabajo
+WorkingDirectory=/usr/local/bin/whisper_daemon
+
+# Comando para EJECUTAR el servicio
+# Apunta al intérprete Python dentro del entorno virtual para usar las dependencias aisladas.
+ExecStart=/usr/local/bin/whisper_daemon/venv/bin/python rabbitmq_consumer_test.py
+
+# Tipo de proceso
+Type=simple
+
+# Opciones de robustez: Reinicia el servicio automáticamente si falla, con una pausa de 5 segundos.
+Restart=always
+RestartSec=5
+
+# Redirecciona la salida estándar y de error al registro de systemd (journalctl)
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+# Indica que este servicio debe iniciarse cuando el sistema esté completamente multiusuario (arranque)
+WantedBy=multi-user.target
+```
+
+> [!NOTE]
+> [`/usr/local/bin` seems to be the conventional place, and this directory should be empty on a fresh installs.](https://askubuntu.com/questions/195652/is-there-a-standard-place-for-placing-custom-linux-scripts)
