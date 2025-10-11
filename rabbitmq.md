@@ -167,3 +167,26 @@ Oct 10 22:00:31 reincar rabbitmq-server[14587]:   Config file(s): /etc/rabbitmq/
 Oct 10 22:00:31 reincar rabbitmq-server[14587]:   Starting broker... completed with 3 plugins.
 Oct 10 22:00:31 reincar systemd[1]: Started rabbitmq-server.service - RabbitMQ broker.
 ```
+
+<br/>
+
+## [Managing Users and Permissions](https://www.rabbitmq.com/docs/access-control#user-management)
+
+<small>[Passwordless Users](https://www.rabbitmq.com/docs/cli#passing-arguments)</small>
+
+### Crear un nuevo usuario administrador para acceder desde fuera de `localhost` y asignarle permisos.
+
+Ejecuta estos comandos para crear un nuevo usuario y darle permisos:
+```sh
+# Crea un nuevo usuario con una contraseña segura
+sudo rabbitmqctl add_user [tu_usuario] [tu_contraseña]
+
+# Asigna la etiqueta de administrador al nuevo usuario
+sudo rabbitmqctl set_user_tags [tu_usuario] administrator
+
+# Asigna permisos de configuración, escritura y lectura al nuevo usuario
+sudo rabbitmqctl set_permissions -p / [tu_usuario] ".*" ".*" ".*"
+```
+
+
+
