@@ -54,6 +54,27 @@ ssh-keygen -t rsa -b 4096 -C "github-action-deploy"
 > [!IMPORTANT]
 > Cuando te pida una frase de contraseña (passphrase), déjala en blanco.
 
+### Configurar la autenticación sin contraseña con la clave pública 
+
+#### Añadir la clave pública: 
+
+La clave pública generada en el paso anterior (`~/.ssh/id_rsa.pub`) debe ser añadida al archivo `~/.ssh/authorized_keys` del usuario con el que te conectarás.
+
+```sh
+cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+```
+
+> [!NOTE]
+> - Asegúrate de que los permisos de los archivos `~/.ssh` y `~/.ssh/authorized_keys` sean correctos para que SSH no ignore el archivo.
+> ```sh
+> chmod 700 ~/.ssh
+> chmod 600 ~/.ssh/authorized_keys
+> ```
+> - **Deshabilitar la autenticación por contraseña:** Una vez que la autenticación por clave funcione, puedes deshabilitar el acceso con contraseña en el archivo de configuración de SSH (`/etc/ssh/sshd_config`) para evitar ataques de fuerza bruta.
+> - **Limitar el acceso:** Si es posible, restringe las conexiones SSH solo desde las direcciones IP de GitHub Actions. Esto se puede hacer con un cortafuegos (ufw).
+> - **Usar un usuario dedicado:** Como se discutió anteriormente, es ideal crear un usuario específico para el despliegue automático, con permisos limitados.
+
+
 <br/>
 
 ## [GitHub Secrets](https://docs.github.com/en/actions/concepts/security/secrets)
