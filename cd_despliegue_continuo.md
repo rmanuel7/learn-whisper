@@ -7,8 +7,13 @@ Configurar un flujo de trabajo de [GitHub Actions](https://docs.github.com/actio
 1. **En el servidor Ubuntu:** Ver si el servicio SSH está instalado (SSH Server).
 2. **En el servidor Ubuntu:** Generar un par de claves SSH (pública y privada).
 3. **En GitHub:** Añadir la clave privada como un secreto del repositorio.
-4 **En el servidor Ubuntu:** Añadir la clave pública como una clave de despliegue (Deploy Key).
-5. **En GitHub:** Crear el flujo de trabajo de GitHub Actions. 
+4. **En el servidor Ubuntu:** Añadir la clave pública como una clave de despliegue (Deploy Key).
+5. **En GitHub:** Crear el flujo de trabajo de GitHub Actions.
+6. **En el servidor Ubuntu:** Instala Git.
+7. **En el servidor Ubuntu:** Clona el repositorio.
+
+
+<br/>
 
 ## [OpenSSH Server](https://documentation.ubuntu.com/server/how-to/security/openssh-server/)
 
@@ -148,4 +153,30 @@ cat ~/.ssh/id_rsa
                # Por ejemplo: sudo systemctl restart mi-servicio.service
    ```
 
+<br/>
 
+## Git
+
+Configuración inicial (una sola vez en el servidor)
+
+> [!IMPORTANT]
+> El comando `git pull` funciona en un contexto de repositorio de Git. No puede "jalar" cambios de la nada. 
+
+### Instala Git
+
+Si aún no lo has hecho, asegúrate de que Git esté instalado en tu servidor.
+
+```sh
+sudo apt update
+sudo apt install git -y
+```
+
+### Clona el repositorio
+
+En tu servidor, navega a la ubicación donde quieres que se encuentre el proyecto y clona el repositorio por primera vez.
+
+```sh
+# Reemplaza con el usuario, repositorio y ruta correctos
+cd /var/www/
+git clone git@github.com:nombre-usuario/daemon_rabbitmq.git
+```
