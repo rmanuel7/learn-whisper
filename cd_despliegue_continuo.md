@@ -4,14 +4,45 @@ Configurar un flujo de trabajo de [GitHub Actions](https://docs.github.com/actio
 
 ### Flujo de trabajo
 
-1. **En el servidor Ubuntu:** Ver si el servicio SSH está instalado (SSH Server).
-2. **En el servidor Ubuntu:** Generar un par de claves SSH (pública y privada).
-3. **En GitHub:** Añadir la clave privada como un secreto del repositorio.
-4. **En el servidor Ubuntu:** Añadir la clave pública como una clave de despliegue (Deploy Key).
-5. **En GitHub:** Crear el flujo de trabajo de GitHub Actions.
-6. **En el servidor Ubuntu:** Instala Git.
-7. **En el servidor Ubuntu:** Clona el repositorio.
+1. **En el servidor Ubuntu:** Crear el usuario de despliegue en el servidor
+2. **En el servidor Ubuntu:** Ver si el servicio SSH está instalado (SSH Server).
+3. **En el servidor Ubuntu:** Generar un par de claves SSH (pública y privada).
+4. **En GitHub:** Añadir la clave privada como un secreto del repositorio.
+5. **En el servidor Ubuntu:** Añadir la clave pública como una clave de despliegue (Deploy Key).
+6. **En GitHub:** Crear el flujo de trabajo de GitHub Actions.
+7. **En el servidor Ubuntu:** Instala Git.
+8. **En el servidor Ubuntu:** Clona el repositorio.
+9. **En el servidor Ubuntu:** Configurar los permisos del directorio de despliegue.  
 
+<br/>
+
+> [!IMPORTANT]
+> ### Usa la URL SSH
+> Para que funcione el flujo de trabajo sin interacción manual, debes usar la **URL SSH del repositorio** y asegurarte de que tu **"Deploy Key"** esté correctamente configurada.
+
+<br/>
+
+## Crear el usuario de despliegue en el servidor
+
+### Conéctate a tu servidor Ubuntu por SSH.
+
+Usa el comando adduser para crear un nuevo usuario. Por ejemplo, deployer.
+
+```sh
+sudo adduser deployer
+```
+> [!NOTE]
+> Este comando te pedirá que ingreses una contraseña y otra información. Puedes dejar los campos opcionales en blanco.
+
+### Configurar la clave SSH para el nuevo usuario
+
+Ahora necesitas generar un nuevo par de claves SSH para este usuario de despliegue, o copiar el que ya tienes. El método más seguro es generar uno nuevo para este fin.  
+
+Cambia al nuevo usuario deployer:
+
+```sh
+sudo su - deployer
+```
 
 <br/>
 
@@ -53,9 +84,6 @@ Conéctate a tu servidor Ubuntu por SSH y ejecuta el siguiente comando para gene
 ssh-keygen -t rsa -b 4096 -C "github-action-deploy"
 ```
 
-> [!NOTE]
-> Durante la creación, se le solicitará una frase de contraseña clave, que deberá ingresar para usar esa clave (cada vez o, en su lugar, usar un `ssh-agent(1)`). En este caso, el comentario es `-C "github-action-deploy"`.
-
 > [!IMPORTANT]
 > Cuando te pida una frase de contraseña (passphrase), déjala en blanco.
 
@@ -79,6 +107,11 @@ cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
 > - **Limitar el acceso:** Si es posible, restringe las conexiones SSH solo desde las direcciones IP de GitHub Actions. Esto se puede hacer con un cortafuegos (ufw).
 > - **Usar un usuario dedicado:** Como se discutió anteriormente, es ideal crear un usuario específico para el despliegue automático, con permisos limitados.
 
+### Añade la clave pública de GitHub:
+
+```sh
+ssh-keyscan github.com >> ~/.ssh/known_hosts
+```
 
 <br/>
 
@@ -180,3 +213,34 @@ En tu servidor, navega a la ubicación donde quieres que se encuentre el proyect
 cd /var/www/
 git clone git@github.com:nombre-usuario/daemon_rabbitmq.git
 ```
+
+<br/>
+
+## Configurar los permisos del directorio de despliegue
+
+**1. Cambia al usuario root:**
+
+```sh
+exit # para salir del usuario deployer
+sudo su - # para ser root
+```
+
+**2. Transfiere la propiedad del directorio al usuario `deployer` y al grupo `www-data` o `daemon-data`, etc...:**
+
+```sh
+sudo chown -R deployer:www-data /var/www/html/whisper-daemon
+```
+
+**3. Establece los permisos correctos:**
+
+```sh
+sudo find /var/www/html/whisper-daemon -type d -exec chmod 775 {} \;
+sudo find /var/www/html/whisper-daemon -type f -exec chmod 664 {} \;
+```
+
+**4. Configura el permiso `g+s` (sticky bit) para que los nuevos archivos dentro de la carpeta hereden los permisos del grupo `www-data`:**
+
+```sh
+sudo chmod g+s /var/www/html/whisper-daemon
+```
+
