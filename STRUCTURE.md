@@ -2,7 +2,7 @@
 
 Documentar de forma legible la estructura del proyecto y los cambios importantes.
 
-```
+```py
 💻 Servidor Ubuntu /
 ├── 📂 bin/              # Comandos esenciales del sistema
 ├── 📂 etc/              # Archivos de configuración
