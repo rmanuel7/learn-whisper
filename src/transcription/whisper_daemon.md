@@ -39,13 +39,13 @@ Primero, necesitamos configurar el sistema creando el usuario de bajo privilegio
 ### Crear un grupo.
 
 ```sh
-sudo addgroup daemon-data
+sudo addgroup audio-transcription
 ```
 
-### Crea el usuario `whisperuser`.
+### Crea el usuario `transcriptor`.
 
 ```sh
-sudo adduser --system --no-create-home --shell /bin/false whisperuser
+sudo adduser --system --no-create-home --shell /bin/false transcriptor
 ```
 
 > [!NOTE]
@@ -56,7 +56,7 @@ sudo adduser --system --no-create-home --shell /bin/false whisperuser
 ### Añadir el usuario al grupo:
 
 ```sh
-sudo usermod -a -G daemon-data whisperuser
+sudo usermod -a -G audio-transcription transcriptor
 ```
 
 ### Crea la carpeta de tu proyecto
@@ -72,7 +72,7 @@ sudo mkdir -p /usr/local/bin/whisper_daemon
 ### Asignar propiedad de la carpata de forma recursiva
 
 ```sh
-sudo chown -R whisperuser:daemon-data /usr/local/bin/whisper_daemon
+sudo chown -R transcriptor:audio-transcription /usr/local/bin/whisper_daemon
 ```
 
 <br/>
@@ -84,7 +84,7 @@ Aquí debe de ir el código completo y depurado, con la lógica robusta de `pika
 ### Cambiar la propiedad temporalmente con `sudo chown`.
 
 ```sh
-sudo chown administrador:daemon-data /usr/local/bin/whisper_daemon
+sudo chown administrador:audio-transcription /usr/local/bin/whisper_daemon
 ```
 
 ### Navega a la carpeta de tu proyecto
@@ -114,7 +114,7 @@ pip install pika
 ### Devolver la propiedad de la carpeta al usuario
 
 ```sh
-sudo chown whisperuser:daemon-data /usr/local/bin/whisper_daemon
+sudo chown transcriptor:audio-transcription /usr/local/bin/whisper_daemon
 ```
 
 <br/>
@@ -140,8 +140,8 @@ After=network.target rabbitmq-server.service
 
 [Service]
 # USUARIO CLAVE: Ejecuta el proceso con el usuario de bajo privilegio
-User=whisperuser
-Group=whisperuser
+User=transcriptor
+Group=audio-transcription
 
 # Directorio de trabajo
 WorkingDirectory=/usr/local/bin/whisper_daemon
