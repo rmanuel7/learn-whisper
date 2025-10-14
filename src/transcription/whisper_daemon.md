@@ -85,6 +85,9 @@ Aquí debe de ir el código completo y depurado, con la lógica robusta de `pika
 
 ```sh
 sudo chown gitdeployer:audio-transcription /usr/local/bin/whisper_daemon
+
+# Cambia al nuevo usuario deployer
+sudo su - gitdeployer
 ```
 
 ### Navega a la carpeta de tu proyecto
