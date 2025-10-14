@@ -84,7 +84,7 @@ Aquí debe de ir el código completo y depurado, con la lógica robusta de `pika
 ### Cambiar la propiedad temporalmente con `sudo chown`.
 
 ```sh
-sudo chown administrador:audio-transcription /usr/local/bin/whisper_daemon
+sudo chown gitdeployer:audio-transcription /usr/local/bin/whisper_daemon
 ```
 
 ### Navega a la carpeta de tu proyecto
