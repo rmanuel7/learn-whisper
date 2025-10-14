@@ -42,10 +42,10 @@ Primero, necesitamos configurar el sistema creando el usuario de bajo privilegio
 sudo addgroup audio-transcription
 ```
 
-### Crea el usuario `transcriptor`.
+### Crea el usuario `audiotranscriptor`.
 
 ```sh
-sudo adduser --system --no-create-home --shell /bin/false transcriptor
+sudo adduser --system --no-create-home --shell /bin/false audiotranscriptor
 ```
 
 > [!NOTE]
@@ -56,7 +56,7 @@ sudo adduser --system --no-create-home --shell /bin/false transcriptor
 ### Añadir el usuario al grupo:
 
 ```sh
-sudo usermod -a -G audio-transcription transcriptor
+sudo usermod -a -G audio-transcription audiotranscriptor
 ```
 
 ### Crea la carpeta de tu proyecto
@@ -72,7 +72,7 @@ sudo mkdir -p /usr/local/bin/whisper_daemon
 ### Asignar propiedad de la carpata de forma recursiva
 
 ```sh
-sudo chown -R transcriptor:audio-transcription /usr/local/bin/whisper_daemon
+sudo chown -R audiotranscriptor:audio-transcription /usr/local/bin/whisper_daemon
 ```
 
 <br/>
@@ -114,7 +114,7 @@ pip install pika
 ### Devolver la propiedad de la carpeta al usuario
 
 ```sh
-sudo chown transcriptor:audio-transcription /usr/local/bin/whisper_daemon
+sudo chown audiotranscriptor:audio-transcription /usr/local/bin/whisper_daemon
 ```
 
 <br/>
@@ -140,7 +140,7 @@ After=network.target rabbitmq-server.service
 
 [Service]
 # USUARIO CLAVE: Ejecuta el proceso con el usuario de bajo privilegio
-User=transcriptor
+User=audiotranscriptor
 Group=audio-transcription
 
 # Directorio de trabajo
