@@ -150,7 +150,9 @@ Environment=ASPNETCORE_ENVIRONMENT=Production
 # Silenciar la salida de mensajes de bienvenida y telemetría de las herramientas de la interfaz de línea de comandos (CLI) de .NET
 Environment=DOTNET_NOLOGO=true
 # Kestrel debe escuchar en localhost:5000 (o el puerto que configures)
-Environment=ASPNETCORE_URLS=http://+:5103
+Environment=ASPNETCORE_URLS=http://0.0.0.0:5103;https://0.0.0.0:5103
+Environment=Kestrel__Certificates__Default__Path=/etc/ssl/certs/reincar.app.pfx
+Environment=Kestrel__Certificates__Default__Password={__password__}
 # Habilita el log estándar de Systemd
 StandardOutput=journal
 StandardError=journal
