@@ -51,6 +51,12 @@ sudo adduser --system --no-create-home --shell /bin/false auditoraidatamanager
 sudo usermod --append --groups auditorai-data auditoraidatamanager
 ```
 
+### Añadir el usuario de despliegue al grupo `auditorai-data`.
+
+```scss
+sudo usermod --append --groups auditorai-data deployer
+```
+
 ### Crear la carpeta raíz del almacenamiento.
 
 Asegúrate de que la ruta coincida con la configuración de tu API.
