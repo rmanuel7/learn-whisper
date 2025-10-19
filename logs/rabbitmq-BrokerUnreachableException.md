@@ -8,6 +8,23 @@
 
 > [!TIP]
 > Las causas más comunes de este problema son la **configuración del firewall o problemas de _binding_ de red** en la configuración.
+> #### Los puertos por defecto utilizados por RabbitMQ para sus servicios principales son: 
+> 
+> *   **5672 (AMQP):** Es el puerto principal para la comunicación de aplicaciones a través del protocolo AMQP (Advanced Message Queuing Protocol) sin cifrado TLS.
+> *   **5671 (AMQPS):** Se utiliza para conexiones AMQP seguras que emplean TLS/SSL para el cifrado.
+> *   **15672 (HTTP):** Puerto para la consola de administración web de RabbitMQ y su API HTTP, que se usa para monitorizar y gestionar el broker.
+> *   **25672 (Erlang):** Es el puerto por defecto para la comunicación entre nodos en un clúster de RabbitMQ, utilizando la distribución de Erlang. 
+> 
+> Otros puertos y consideraciones 
+> 
+> *   **Puertos para clúster:** Además del 25672, los nodos de un clúster de RabbitMQ necesitan que otros puertos estén abiertos para la comunicación interna. Esto incluye el puerto 4369 (EPMD), que ayuda a los nodos de Erlang a encontrarse entre sí.
+> *   **Puertos alternativos:** Algunos servicios adicionales, como el plugin de administración con SSL, también usan puertos específicos. Por ejemplo, el puerto 15671 se utiliza para la interfaz de administración sobre HTTPS.
+> *   **Acceso y seguridad:** Es crucial considerar la seguridad al abrir estos puertos. Por ejemplo, los puertos de administración (como el 15672) no deben ser accesibles públicamente desde internet en un entorno de producción para evitar riesgos. 
+> 
+> Para una configuración en producción, lo ideal es ajustar los firewalls para que solo se permitan las conexiones desde orígenes confiables a los puertos necesarios. 
+
+
+
 
 <br/>
 
