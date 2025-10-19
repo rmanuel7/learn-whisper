@@ -20,7 +20,55 @@ Crear un usuario con privilegios mínimos para que el servicio ASP.NET Core pued
 <br/>
 
 > [!NOTE]
-> **Nunca** deberías ejecutar servicios que no necesiten privilegios de root con el usuario `root`. Una buena práctica de seguridad y de gestión de sistemas crear un usuario y un grupo dedicados.
+> **Nunca** deberías ejecutar servicios que no necesiten privilegios de root con el usuario `root`.  
+> Una buena práctica de seguridad y de gestión de sistemas es crear un usuario y un grupo dedicados.
+
+<br/>
+
+La siguiente secuencia de comandos, ejecutada **una sola vez** en el servidor, garantiza que tu usuario de servicio (`auditoraidatamanager`) pueda ejecutar la aplicación y que tu usuario de despliegue (`deployer`) pueda escribir en la carpeta.
+
+```coffeescript
+# 1. Crear el grupo de servicio (auditorai-data)
+sudo addgroup auditorai-data
+
+# 2. Crear el usuario de bajo privilegio (auditoraidatamanager)
+# Usamos --system y --no-create-home ya que es un usuario de servicio Kestrel
+sudo adduser --system --no-create-home --shell "/bin/false" auditoraidatamanager
+
+# 3. Añadir el usuario de servicio al grupo
+sudo usermod --append --groups auditorai-data auditoraidatamanager
+
+# 4. Añadir el usuario de despliegue al grupo (Asegúrate de que 'deployer' es el nombre correcto)
+sudo usermod --append --groups auditorai-data deployer
+
+# 5. Crear la carpeta raíz del almacenamiento
+sudo mkdir --parents "/var/www/auditorai/storage"
+
+# 6. Asignar la propiedad de la carpeta al usuario de servicio y al grupo de servicio
+sudo chown --recursive auditoraidatamanager:auditorai-data "/var/www/auditorai/storage"
+
+# 7. 🚨 CRÍTICO: Asignar permisos 775 para permitir la escritura del grupo
+# Esto significa:
+#   - Propietario (auditoraidatamanager): Lectura, Escritura, Ejecución (7)
+#   - Grupo (auditorai-data): Lectura, Escritura, Ejecución (7) <- Clave para el despliegue
+#   - Otros: Lectura, Ejecución (5)
+sudo chmod --recursive 775 "/var/www/auditorai/storage"
+```
+
+-----
+
+### Resumen de los Problemas Resueltos con esta Configuración
+
+Con esta configuración en el servidor, los siguientes problemas que experimentaste quedan resueltos:
+
+| Problema | Causa | Solución en la Configuración |
+| :--- | :--- | :--- |
+| **`tar: Cannot open: Permission denied`** | El usuario de despliegue (que ejecuta `tar` o `dotnet publish`) no podía escribir en la carpeta de destino. | El comando `chmod 775` da permisos de **Escritura** al grupo `auditorai-data`, al que pertenece el usuario `deployer`. |
+| **`Access to the path '/etc/ssl/certs/...' is denied`** | El usuario de servicio (`auditoraidatamanager`) no podía leer el certificado SSL. | Al ser miembro del grupo `auditorai-data`, solo necesitas ejecutar `sudo chgrp auditorai-data /etc/ssl/certs/reincar.app.pfx` y `sudo chmod g+r /etc/ssl/certs/reincar.app.pfx` para darle permiso de lectura al grupo. |
+| **`sudo: a password is required`** | El usuario de despliegue no podía usar `sudo` para comandos de limpieza o reinicio. | (Requiere un paso adicional) Configurar `sudoers` en el servidor para permitir `NOPASSWD` para los comandos `systemctl restart`. |
+
+> [!NOTE]
+> Una vez que te asegures de que todos los permisos de archivo están en su lugar, el *workflow* de despliegue debe funcionar de manera fluida.
 
 <br/>
 
