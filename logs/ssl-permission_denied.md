@@ -4,44 +4,71 @@
 > Oct 18 20:43:55 DESKTOP-DI9J8K3 dotnet[142862]:  ---> System.IO.IOException: Permission denied
 > ```
 
-### Pasos para aplicar la solución 
+## Pasos para aplicar la solución 
 
-Para aplicar las correcciones, necesitará permisos de superusuario (`sudo`). 
+> [!NOTE]
+> Para aplicar las correcciones, necesitará permisos de superusuario (`sudo`). 
 
-1.  **Cambiar el grupo propietario del archivo del certificado**:  
-    Esta acción cambia el grupo del archivo `reincar.app.pfx` al grupo `auditorai-data`.
+> [!TIP]
+> **`Crear un grupo dedicado para el certificado y luego agregar a los usuarios y servicios que lo necesiten`** a ese grupo es una alternativa limpia y segura, especialmente en entornos más sencillos. 
+
+<br/>
+
+Esta estrategia se basa en el principio de mínimo privilegio: el acceso al certificado se restringe únicamente a aquellos que lo necesitan, sin afectar los permisos del sistema de archivos de manera más amplia. 
+
+### Pasos para crear un grupo para el certificado 
+
+1.  **Crear el nuevo grupo**:  
+    Use el comando `groupadd` para crear el grupo. Elija un nombre descriptivo, como `cert-reincar` o `ssl-apps`.
     
     ```
-    sudo chgrp auditorai-data /etc/ssl/certs/reincar.app.pfx
+    sudo groupadd cert-reincar
     ```
     
-2.  **Otorgar permisos de lectura al grupo**:  
-    Esta acción agrega permisos de lectura (`g+r`) al grupo `auditorai-data`, permitiendo que todos los miembros de ese grupo lean el archivo.
+2.  **Agregar los usuarios al nuevo grupo**:  
+    Use el comando `usermod -aG` para agregar cada usuario o servicio que necesita el certificado al nuevo grupo. Reemplace `<nombre_de_usuario>` con el nombre del usuario real (por ejemplo, `auditoraidatamanager`). La opción `-aG` añade el usuario a un grupo secundario sin eliminarlo de sus otros grupos.
+    
+    ```
+    sudo usermod -aG cert-reincar auditoraidatamanager
+    # Repita para otros usuarios o servicios...
+    sudo usermod -aG cert-reincar otro_usuario
+    ```
+    
+3.  **Cambiar el grupo propietario del certificado**:  
+    Ahora, cambie el grupo propietario del archivo del certificado al nuevo grupo que acaba de crear.
+    
+    ```
+    sudo chgrp cert-reincar /etc/ssl/certs/reincar.app.pfx
+    ```
+    
+4.  **Otorgar permisos de lectura al grupo**:  
+    Esta acción agrega permisos de lectura (`g+r`) al grupo `cert-reincar`, permitiendo que todos los miembros de ese grupo lean el archivo.
     
     ```
     sudo chmod g+r /etc/ssl/certs/reincar.app.pfx
     ```
     
-3.  **Verificar la configuración de permisos**:  
+5.  **Verificar la configuración de permisos**:  
     Para confirmar que los cambios se aplicaron correctamente, puede usar el comando `ls -l`.
     
     ```
     ls -l /etc/ssl/certs/reincar.app.pfx
     ```
     
-    La salida debería mostrar `root auditorai-data` como propietario y grupo, e incluir un permiso de lectura (`r`) para el grupo. Por ejemplo:
+    La salida debería mostrar `root cert-reincar` como propietario y grupo, e incluir un permiso de lectura (`r`) para el grupo. Por ejemplo:
     
     ```
-    -rw-r----- 1 root auditorai-data 2433 oct 18 21:51 /etc/ssl/certs/reincar.app.pfx
+    -rw-r----- 1 root cert-reincar 2433 oct 18 21:51 /etc/ssl/certs/reincar.app.pfx
     ```
     
-4.  **Reiniciar el servicio**:  
+6.  **Reiniciar el servicio**:  
     Después de cambiar los permisos, reinicie el servicio que utiliza el certificado para que pueda cargar el archivo con los nuevos permisos.
     
     ```
     sudo systemctl restart <nombre_del_servicio>
     ```
-     
+
+
 > [!NOTE]
 > Al cambiar el grupo propietario del certificado a `auditorai-data` y luego otorgar permisos de lectura a ese grupo, le permite al usuario de servicio `auditoraidatamanager` acceder al archivo sin comprometer la seguridad del directorio `/etc/ssl/certs/` ni de otros archivos SSL.
 
