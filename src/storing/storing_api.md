@@ -86,21 +86,27 @@ Aquí debe de ir el código completo y depurado, con la lógica de ASP.NET Core 
 
 ## Install .NET Core
 
-- The first command is a `wget` command. `wget` is a non-interactive network downloader.
-  ```bash
-  wget https://packages.microsoft.com/config/ubuntu/18.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
-  ```
+<small>[Install .NET Core](https://learn.microsoft.com/en-us/troubleshoot/developer/webapps/aspnetcore/practice-troubleshoot-linux/1-3-install-dotnet-core-linux#install-net-core)</small>  
+<small>[Install .NET SDK or .NET Runtime on Ubuntu](https://learn.microsoft.com/en-us/dotnet/core/install/linux-ubuntu-install?tabs=dotnet8&pivots=os-linux-ubuntu-2404)</small>
 
-- In the second command, `dpkg` is the package manager for Debian and Ubuntu. This command adds the Microsoft package signing key to the list of trusted keys, and then adds the package repository.
-  ```bash
-  sudo dpkg -i packages-microsoft-prod.deb
-  ```
+### Install the SDK
 
-- The **ASP.NET Core Runtime** allows you to run apps that were made with .NET that didn't provide the runtime.
-  ```bash
-  sudo apt-get update && \
-    sudo apt-get install -y aspnetcore-runtime-8.0
-  ```
+The .NET SDK allows you to develop apps with .NET. If you install the .NET SDK, you don't need to install the corresponding runtime. To install the .NET SDK, run the following commands:
+
+```sh
+sudo apt-get update && \
+  sudo apt-get install -y dotnet-sdk-8.0
+```
+
+### Install the runtime
+
+The ASP.NET Core Runtime allows you to run apps that were made with .NET that didn't provide the runtime. The following commands install the ASP.NET Core Runtime, which is the most compatible runtime for .NET. In your terminal, run the following commands:
+
+```sh
+sudo apt-get update && \
+  sudo apt-get install -y aspnetcore-runtime-8.0
+```
+
 > [!TIP]
 > .NET Core packages are named in the format of {**product**}-{**type**}-{**version**}
 
