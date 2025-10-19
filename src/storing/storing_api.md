@@ -210,7 +210,7 @@ Environment=ASPNETCORE_ENVIRONMENT=Production
 # Silenciar la salida de mensajes de bienvenida y telemetría de las herramientas de la interfaz de línea de comandos (CLI) de .NET
 Environment=DOTNET_NOLOGO=true
 # Kestrel debe escuchar en localhost:5000 (o el puerto que configures)
-Environment=ASPNETCORE_URLS=http://0.0.0.0:5103;https://0.0.0.0:5103
+Environment=ASPNETCORE_URLS=http://0.0.0.0:5103;https://0.0.0.0:7103
 Environment=Kestrel__Certificates__Default__Path=/etc/ssl/certs/reincar.app.pfx
 Environment=Kestrel__Certificates__Default__Password={__password__}
 # Habilita el log estándar de Systemd
@@ -271,9 +271,9 @@ To configurate the server proxy funcionality
     # Habilita el reenvío de encabezados para el host
     ProxyPreserveHost On
 
-    # Redirige todo el tráfico a la aplicación Kestrel en el puerto SEGURO 5101
-    ProxyPass / https://127.0.0.1:5103/
-    ProxyPassReverse / https://127.0.0.1:5103/
+    # Redirige todo el tráfico a la aplicación Kestrel en el puerto SEGURO 7103
+    ProxyPass / https://127.0.0.1:7103/
+    ProxyPassReverse / https://127.0.0.1:7103/
 
     # Agrega el encabezado "X-Forwarded-Proto: https"
     RequestHeader set X-Forwarded-Proto "https"
@@ -282,4 +282,3 @@ To configurate the server proxy funcionality
     SSLProxyEngine On
 </VirtualHost>
 ```
-
