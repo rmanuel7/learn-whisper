@@ -1,4 +1,4 @@
-# Estructura del servidor Ubuntu
+# [Estructura del servidor Ubuntu](https://learn.microsoft.com/en-us/troubleshoot/developer/webapps/aspnetcore/practice-troubleshoot-linux/1-2-linux-special-directories-users-package-managers#linux-special-directories)
 
 Documentar de forma legible la estructura del proyecto y los cambios importantes.
 
