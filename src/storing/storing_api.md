@@ -232,6 +232,57 @@ WantedBy=multi-user.target
 
 ## Apache Config
 
+### [Update and upgrade packages](https://learn.microsoft.com/en-us/windows/wsl/setup/environment#update-and-upgrade-packages)
+
+We recommend that you regularly update and upgrade your packages using the preferred package manager for the distribution. For Ubuntu or Debian, use the command:
+
+```coffeescript
+sudo apt update && sudo apt upgrade
+```
+
+### [Upgrade the package manager database](https://learn.microsoft.com/en-us/troubleshoot/developer/webapps/aspnetcore/practice-troubleshoot-linux/1-2-linux-special-directories-users-package-managers#upgrade-the-package-manager-database)
+
+#### To update the package database on Ubuntu
+
+```coffeescript
+sudo apt update
+```
+
+> [!NOTE]
+> *   The update command **doesn't actually upgrade** any of the installed software packages.
+> *   Instead, it updates the package database.
+
+#### To upgrade any of the installed software packages on Ubuntu
+
+```coffeescript
+sudo apt upgrade
+```
+
+### [Install the package](https://ubuntu.com/tutorials/install-and-configure-apache#1-overview)
+ 
+To install Apache, install the latest meta-package apache2 by running:
+
+```coffeescript
+sudo apt update
+sudo apt install apache2
+```
+
+### [Configure Apache2 for HTTPS](https://documentation.ubuntu.com/server/how-to/web-services/use-apache2-modules/#configure-apache2-for-https)
+
+The `mod_ssl` module adds an important feature to the Apache2 server - the ability to encrypt communications.
+
+```coffeescript
+sudo a2enmod ssl
+```
+
+Restart the service to enable the new settings:
+
+```coffeescript
+sudo systemctl restart apache2.service
+```
+
+### [Setting up the VirtualHost Configuration File](https://ubuntu.com/tutorials/install-and-configure-apache#4-setting-up-the-virtualhost-configuration-file)
+
 To configurate the server proxy funcionality
 
 **Archivo:** `/etc/apache2/sites-available/auditorai-storingapi.conf`
