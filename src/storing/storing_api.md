@@ -281,6 +281,17 @@ Restart the service to enable the new settings:
 sudo systemctl restart apache2.service
 ```
 
+### [Enable Reverse Proxy on Apache2](https://www.digitalocean.com/community/tutorials/how-to-use-apache-http-server-as-reverse-proxy-using-mod_proxy-extension)
+
+To enable these four modules
+
+```coffeescript
+sudo a2enmod proxy
+sudo a2enmod proxy_http
+sudo a2enmod headers
+sudo a2enmod rewrite
+```
+
 ### [Setting up the VirtualHost Configuration File](https://ubuntu.com/tutorials/install-and-configure-apache#4-setting-up-the-virtualhost-configuration-file)
 
 To configurate the server proxy funcionality
