@@ -53,6 +53,10 @@ sudo chown --recursive auditoraidatamanager:auditorai-data "/var/www/auditorai/s
 #   - Grupo (auditorai-data): Lectura, Escritura, Ejecución (7) <- Clave para el despliegue
 #   - Otros: Lectura, Ejecución (5)
 sudo chmod --recursive 775 "/var/www/auditorai/storage"
+
+# [Opcional] Paso 8: Activar el bit “setgid”
+# Esto hace que todas las carpetas y archivos nuevos dentro de /var/www/auditorai/storage hereden el grupo auditorai-data
+sudo chmod g+s "/var/www/auditorai/storage"
 ```
 
 -----
@@ -120,6 +124,17 @@ El usuario y grupo `auditoraidatamanager:auditorai-data` tendrán control sobre 
 ```scss
 sudo chown --recursive auditoraidatamanager:auditorai-data /var/www/auditorai/storage
 ```
+
+### [Opcional] Activar el bit `setgid`
+
+Esto hace que todas las carpetas y archivos nuevos dentro de `/var/www/auditorai/storage` hereden el grupo `auditorai-data`
+
+```scss
+sudo chmod g+s "/var/www/auditorai/storage"
+```
+
+> [!NOTE]
+> Nota la `s` en lugar de la `x` del grupo — eso indica que el **setgid** está activo.
 
 <br/>
 
@@ -200,6 +215,8 @@ Restart=always
 RestartSec=10
 # Señal que se envía cuando presionas Ctrl+C en la terminal
 KillSignal=SIGINT
+# Esto asegura que los archivos se creen como rw-rw-r-- en lugar de rw-r--r--.
+UMask=0002
 # Etiqueta asignada a todos los mensajes que el servicio envía al sistema de registro (syslog)
 SyslogIdentifier=auditorai-storage
 # Usuario y grupo bajo los cuales se ejecutará la API (debe tener permisos en /var/www/auditorai/storage)
@@ -224,6 +241,14 @@ WantedBy=multi-user.target
 > [!IMPORTANT]
 > #### Prerrequisito en el Servidor Ubuntu
 > Debes tener configurado un servicio `systemd` en tu servidor Ubuntu
+> #### Configurar la `UMask` del servicio `systemd`
+> Esto asegura que los archivos se creen como `rw-rw-r--` en lugar de `rw-r--r--`.
+
+
+Agrega lo siguiente:
+
+[Service]
+UMask=0002
 
 > [!NOTE]
 > Después de crear este archivo, lo habilitarías con `sudo systemctl enable storing-api.service`.
