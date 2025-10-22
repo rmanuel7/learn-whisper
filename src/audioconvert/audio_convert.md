@@ -54,17 +54,24 @@ Este patrón es el **estándar de la industria** para integrar Asterisk con sist
 
 ### [Habilitar AMI en Asterisk](https://docs.asterisk.org/Configuration/Interfaces/Asterisk-Manager-Interface-AMI/AMI-v2-Specification/)
 
-Asegúrate de que `manager.conf` esté configurado para permitir conexiones AMI desde la máquina del agente.
+*   Crear un usuario y una contraseña específicos que tu Agente Bridge usará para autenticarse y enviar comandos a Asterisk.
+
+*   Asegúrate de que `manager.conf` esté configurado para permitir conexiones AMI desde la máquina del agente.
 
 <small>**Archivo**:`/etc/asterisk/manager.conf`</small>
 
 ```ini
+; /etc/asterisk/manager.conf
+
 [general]
 enabled = yes
 port = 5038
-bindaddr = 0.0.0.0
+bindaddr = 0.0.0.0 ; Escucha en todas las interfaces
 
-[admin]
+; -----------------------------------------------------
+; Usuario para el Agente de Conversión (Agente Bridge)
+; -----------------------------------------------------
+[auditorai]
 secret = tu_password_secreto
 read = all
 write = all
@@ -89,33 +96,39 @@ write = all
 
 <br/>
 
-### Configurar un dialplan para conversión
+### [Dialplan contexts](https://docs.asterisk.org/Configuration/Dialplan/Contexts-Extensions-and-Priorities/#dialplan-contexts)
 
-Edita el archivo de dialplan `/etc/asterisk/extensions.conf` para agregar un contexto que convierta el audio:
+#### [Creating Dialplan Extensions](https://docs.asterisk.org/Deployment/Basic-PBX-Functionality/Creating-Dialplan-Extensions/)
+
+Any sections in the dialplan beneath those two sections (`[general]` and `[globals]`) is known as a [context](https://docs.asterisk.org/Configuration/Dialplan/Contexts-Extensions-and-Priorities). 
+
+##### Configurar un dialplan para conversión
+
+Edita el archivo de dialplan `/etc/asterisk/extensions.conf` para **agregar un contexto** que convierta el audio:
 
 ```ini
 ; /etc/asterisk/extensions.conf
 
-[audio-conversion-context]
+[convert-audio]
 ; Estas variables ${ARG1} y ${ARG2} son pasadas por la acción AMI Originate.
 ; En AMI, las pasaremos como "Variable: ARG1=/ruta.gsm,ARG2=/ruta.wav"
 
-exten => s,1,NoOp(Iniciando conversion de ${ARG1} a ${ARG2})
-exten => s,n,Set(GSM_FILE=${ARG1}) 
-exten => s,n,Set(WAV_FILE=${ARG2}) 
+exten => convert,1,Answer() ; Contesta o activa el canal local para ejecutar la acción
+same => n,NoOp(Iniciando conversion de ${ARG1} a ${ARG2}) ; Mensaje de log
+same => n,Set(GSM_FILE=${ARG1}) ; Almacena la ruta del archivo GSM
+same => n,Set(WAV_FILE=${ARG2}) ; Almacena la ruta del archivo WAV
 
-; ... [Resto de tu lógica de conversión con MixMonitor] ...
+same => n,Set(FILE=${GSM_FILE})
+same => n,Set(DESTFILE=${WAV_FILE})
+same => n,Convert(${FILE},${DESTFILE}) ; Ejecuta la transcodificación
 
-exten => s,n,Set(MONITOR_FILENAME=${WAV_FILE}) 
-exten => s,n,MixMonitor(${MONITOR_FILENAME},b)
-exten => s,n,Playback(${GSM_FILE:0:-4})
-exten => s,n,StopMixMonitor()
-
-exten => s,n,NoOp(Conversion de audio finalizada.)
-exten => s,n,Hangup()
+same => n,NoOp(Conversion de audio finalizada.)
+same => n,Hangup() ; Cuelga o cerrar el canal local después de ejecutar la acción
 ```
 
 > [!IMPORTANT]
+> #### Recarga Asterisk
+> En la CLI de Asterisk, ejecuta `dialplan reload` para que los cambios surtan efecto.
 > #### Módulo `Convert`
 > En versiones recientes de Asterisk (como 20.x), el soporte para `app_convert` puede estar deprecado o no incluido por defecto.
 > *   Verifica que `app_convert` esté habilitado en `menuselect` (`make menuselect` -> `Applications`).
