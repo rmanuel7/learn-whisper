@@ -42,3 +42,6 @@ Documentar de forma legible la estructura del proyecto y los cambios importantes
 │   └── 📄 log/           # Archivos de registro del sistema
 └── 📂 ...               # Otros directorios del sistema (boot, usr, media, etc.)
 ```
+
+> [!NOTE]
+> * `/var/lib/`. Este es un directorio estándar de Linux para **datos de aplicaciones y servicios**.
