@@ -310,6 +310,9 @@ Para **iniciar Asterisk**:
 sudo /etc/init.d/asterisk start
 ```
 
+> [!NOTE]
+> *   `ps aux | grep asterisk`: mostrar todos los procesos en ejecución que están relacionados con Asterisk.
+
 <img width="1318" height="130" alt="image" src="https://github.com/user-attachments/assets/8e12dd07-2be8-462f-a2c7-3751371d48c9" />
 
 <br/>
