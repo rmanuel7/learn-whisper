@@ -186,10 +186,28 @@ Asterisk no tiene soporte nativo directo para RabbitMQ en el dialplan, pero pued
 
 ### Configuration Files
 
-This location is used to store and read AuditorAI configuration files. 
+This location `audetcdir => /etc/auditorai` is used to store and read AuditorAI configuration files.
 
-```
-audetcdir => /etc/auditorai
+**Archivo:** `/etc/auditorai/transcoding.conf`
+
+```ini
+[RabbitMQ]
+HostName  = localhost
+QueueName = Asterisk.Transcoding
+
+[AsteriskAMI]
+Addr   = 127.0.0.1
+Port   = 5038
+User   = auditorai
+Secret = "Tu6...JYL"
+
+[Logging]
+MinimumLevel = CRITICAL # DEBUG | INFO | WARNING | ERROR | CRITICAL
+
+[GitHub]
+RepoOwner   = "PatternLib"
+RepoName    = "reincar-auditorai"
+GitHubToken = "github_pat_11BI...MAmOm3fXlb"
 ```
 
 
