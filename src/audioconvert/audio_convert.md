@@ -135,12 +135,218 @@ same => n,Hangup() ; Cuelga o cerrar el canal local después de ejecutar la acci
 > #### Formatos soportados
 > Confirma que `format_gsm` y `format_wav` estén habilitados en `menuselect` para evitar errores de compatibilidad.
 > #### Ubicación de archivos
-> Usa `/usr/local/src` para los archivos `.gsm`, como indicaste. Asegúrate de que Asterisk tenga permisos de lectura/escritura (`sudo chown asterisk:asterisk /usr/local/src`).
-> *   `sudo chmod +rw /path/to/`
+> *   Usa `/var/local/auditorai/` para los archivos `.gsm` y `.wav`.
+> *   Asegúrate de que Asterisk tenga permisos de lectura/escritura (`sudo chown asterisk:asterisk /var/local/auditorai/`).
+> *   `sudo chmod +rw /var/local/auditorai/`
 
 <br/>
 
-2.  **Crear el Agente Bridge:** Desarrolla un servicio ligero (en C\# .NET, por ejemplo, usando `RabbitMQ.Client` y una librería AMI para C\#) que escuche la cola de RabbitMQ.
-3.  **Enviar Acción AMI:** Cuando el agente reciba un mensaje, inmediatamente envía una acción `Originate` al AMI, pasando las rutas de archivo como variables al `[audio-conversion-context]` que ya definiste en `extensions.conf`.
+### [Using Python AMI to ejecutar el contexto de conversión de dialplan](https://pypi.org/project/asterisk-ami/)
+
+Asterisk no tiene soporte nativo directo para RabbitMQ en el dialplan, pero puedes integrar ambos mediante **Asterisk AMI (Asterisk Manager Interface)** o **ARI (Asterisk REST Interface)** con un proxy o middleware **que use RabbitMQ** para encolar tareas.
+
+#### Implementación en Python (usando pika para RabbitMQ y pyst2 para AMI):
+
+*   Instala dependencias: `pip install pika asterisk.ami`.
+
+*   Productor (envía tarea a la cola): Crea `main.py` como un proxy **que use RabbitMQ** para encolar tareas:
+
+```py
+    def on_convert_request(self, event):
+        """Callback cuando llega un mensaje RabbitMQ."""
+        gsm_path = event.get("gsm_path")
+        wav_path = event.get("wav_path")
+
+        self.trace.conversion_requested(gsm_path, wav_path)
+
+        try:
+            client = self.connect_ami()
+            self.trace.conversion_started(gsm_path, wav_path)
+
+            action = SimpleAction(
+                'Originate',
+                Channel='Local/convert@convert-audio',
+                Context='convert-audio',
+                Exten='convert',
+                Priority=1,
+                CallerID='AudioConverter',
+                Variable=f'ARG1={gsm_path},ARG2={wav_path}'
+            )
+
+            response = client.send_action(action, timeout=10)
+            self.trace.conversion_successful(gsm_path, wav_path, response.response)
+
+            client.logoff()
+
+        except Exception as ex:
+            self.trace.conversion_failed(gsm_path, wav_path, ex)
+```
+
+<br/>
+
+## Configuración de usuario y permisos
+
+Crear un usuario con privilegios mínimos para que el servicio ASP.NET Core pueda acceder y gestionar el directorio de almacenamiento de forma segura, sin tener acceso a otras partes sensibles del sistema.
+
+<br/>
+
+> [!NOTE]
+> **Nunca** deberías ejecutar servicios que no necesiten privilegios de root con el usuario `root`.  
+> Una buena práctica de seguridad y de gestión de sistemas es crear un usuario y un grupo dedicados.
+
+<br/>
+
+La siguiente secuencia de comandos, ejecutada **una sola vez** en el servidor, garantiza que tu **usuario de servicio** pueda ejecutar la aplicación y que tu **usuario de despliegue** pueda escribir en la carpeta.
+
+```coffeescript
+# 1. Crear el grupo de servicio, solo sino esta definido
+sudo addgroup "reincar-auditorai"
+
+# 2. Crear el usuario de bajo privilegio
+# Usamos --system y --no-create-home ya que es un usuario de servicio
+# 2.1. Este usuario será para ejecutar el servicio proxy **que use RabbitMQ** para encolar tareas. 
+sudo adduser --system --no-create-home --shell "/bin/false" auditorai-audio
+
+# 2.2. Este usuario será el propietario de los archivos y directorios de almacenamiento. 
+sudo adduser --system --no-create-home --shell "/bin/false" auditorai-data
+
+# 3. Añadir los usuario relacionados con el servicio al grupo (Asegúrate que sean los nombres correctos)
+sudo usermod --append --groups "reincar-auditorai" "auditorai-audio"
+
+sudo usermod --append --groups "reincar-auditorai" "auditorai-data"
+
+sudo usermod --append --groups "reincar-auditorai" "asterisk"
+
+sudo usermod --append --groups "reincar-auditorai" "auditorai-deploy"
+
+# 4 Crea la carpeta
+# 4.1 Carpeta del proyecto
+sudo mkdir --parents "/usr/local/bin/auditorai/transcoding"
+
+# 4.2. Carpeta raíz del almacenamiento, solo sino existen
+sudo mkdir --parents "/var/local/auditorai/gsm"
+
+sudo mkdir --parents "/var/local/auditorai/wav"
+
+sudo mkdir --parents "/var/local/auditorai/transcription"
+
+sudo mkdir --parents "/var/local/auditorai/completions"
+
+# 5. Asignar la propiedad de la carpeta
+# 5.1. Carpeta de del servicio al usuario de servicio y al grupo de servicio
+sudo chown --recursive "auditorai-audio:reincar-auditorai" "/usr/local/bin/auditorai/transcoding"
+
+# 5.1. Carpeta de almacenamiento al usuario de almacenamiento y al grupo de almacenamiento.
+sudo chown --recursive "auditorai-data:reincar-auditorai" "/var/local/auditorai/"
+
+# 6. 🚨 CRÍTICO: Asignar permisos 775 para permitir la escritura del grupo
+# Esto significa:
+#   - Propietario: Lectura, Escritura, Ejecución (7)
+#   - Grupo (auditorai-data): Lectura, Escritura, Ejecución (7) <- Clave para el despliegue
+#   - Otros: Lectura, Ejecución (5)
+sudo chmod --recursive 775 "/usr/local/bin/auditorai/transcoding" # Propietario (auditorai-audio)
+
+sudo chmod --recursive 775 "/var/local/auditorai/"                # Propietario (auditorai-data)
+
+# [Opcional] Paso 7: Activar el bit 'setgid'
+# Esto hace que todas las carpetas y archivos nuevos dentro de `/var/local/auditorai/` hereden el grupo `reincar-auditorai`
+sudo chmod g+s "/var/local/auditorai/"
+```
+
+> [!TIP]
+> Una vez que te asegures de que todos los permisos de archivo están en su lugar, el *workflow* de despliegue debe funcionar de manera fluida.
+
+> [!NOTE]
+> *   `--system`: Crea un usuario de sistema, lo que indica que no es un usuario interactivo.
+> *   `--no-create-home`: No crea un directorio de inicio, ya que el servicio no lo necesita.
+> *   `--shell /bin/false`: No puede ser utilizado para iniciar sesión.
+
+> [!NOTE]
+> *   Asegúrate de que los audios estén en `/var/local/auditorai/` y tenga permisos de lectura/escritura.
+> *   `/var/local/` parece ser el lugar convencional y este directorio debería estar vacío en una instalación nueva.
+
+> [!NOTE]
+> *   Asegúrate de que tus scripts estén en `/usr/local/bin` y sean ejecutables.
+> *   `/usr/local/bin` parece ser el lugar convencional y este directorio debería estar vacío en una instalación nueva.
+
+> [!NOTE]
+> Nota la `s` en lugar de la `x` del grupo — eso indica que el **setgid** está activo.
+> *   `sudo chmod g+s "/var/local/auditorai/"`
+
+<br/>
+
+## Configurar el servicio con `systemd`
+
+### Definición del Servicio `systemd`.
+
+Debes crear un archivo de unidad de servicio llamado `auditorai-transcodingpy.service` en el directorio `/etc/systemd/system/`.
+
+```sh
+sudo vim /etc/systemd/system/auditorai-transcodingpy.service
+```
+
+**Archivo:** `/etc/systemd/system/auditorai-transcodingpy.service`
+
+```ini
+[Unit]
+# Descripción legible del servicio
+Description=Python Audio Transcoding (RabbitMQ + Asterisk AMI)
+# Asegura que el servicio se inicie DESPUÉS de que la red y RabbitMQ estén disponibles
+After=network.target rabbitmq-server.service asterisk.service
+
+[Service]
+# Usuario y grupo bajo los cuales se ejecutará el proceso
+User=auditorai-audio
+Group=reincar-auditorai
+
+# Esto asegura que los archivos se creen como rw-rw-r-- en lugar de rw-r--r--.
+UMask=0002
+
+# Directorio de trabajo
+WorkingDirectory=/usr/local/bin/auditorai/transcoding
+
+# Comando para EJECUTAR el servicio
+# Apunta al intérprete Python dentro del entorno virtual para usar las dependencias aisladas.
+ExecStart=/usr/local/bin/auditorai/transcoding/venv/bin/python main.py
+
+# Tipo de proceso
+Type=simple
+
+# Opciones de robustez: Reinicia el servicio automáticamente si falla, con una pausa de 5 segundos.
+Restart=always
+RestartSec=5
+
+# Redirecciona la salida estándar y de error al registro de systemd (journalctl)
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+# Indica que este servicio debe iniciarse cuando el sistema esté completamente multiusuario (arranque)
+WantedBy=multi-user.target
+```
+
+> [!IMPORTANT]
+> #### Prerrequisito en el Servidor Ubuntu
+> Debes tener configurado un servicio `systemd` en tu servidor Ubuntu
+> #### Configurar la `UMask` del servicio `systemd`
+> Esto asegura que los archivos se creen como `rw-rw-r--` en lugar de `rw-r--r--`.
+
+
+### Habilita y arranca el servicio:
+
+```sh
+sudo systemctl daemon-reload
+sudo systemctl enable auditorai-transcodingpy.service
+sudo systemctl start auditorai-transcodingpy.service
+```
+
+### Verifica el estado del servicio para asegurarte de que está funcionando correctamente con el usuario correcto:
+
+```sh
+sudo systemctl status auditorai-transcodingpy.service
+
+sudo journalctl -fu auditorai-transcodingpy.service
+```
+
 
 
