@@ -184,6 +184,17 @@ Asterisk no tiene soporte nativo directo para RabbitMQ en el dialplan, pero pued
 
 <br/>
 
+### Configuration Files
+
+This location is used to store and read AuditorAI configuration files. 
+
+```
+audetcdir => /etc/auditorai
+```
+
+
+<br/>
+
 ## Configuración de usuario y permisos
 
 Crear un usuario con privilegios mínimos para que el servicio ASP.NET Core pueda acceder y gestionar el directorio de almacenamiento de forma segura, sin tener acceso a otras partes sensibles del sistema.
