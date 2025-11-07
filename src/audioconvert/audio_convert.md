@@ -107,23 +107,70 @@ Any sections in the dialplan beneath those two sections (`[general]` and `[globa
 Edita el archivo de dialplan `/etc/asterisk/extensions.conf` para **agregar un contexto** que convierta el audio:
 
 ```ini
+; ---------------------------------------------------------------------
 ; /etc/asterisk/extensions.conf
+; Contexto: [convert-audio]
+;
+; Descripción:
+;   Este contexto realiza un flujo completo de conversión de audio GSM a WAV,
+;   incluyendo:
+;     1. Descarga remota del archivo GSM.
+;     2. Conversión local a formato WAV.
+;     3. Envío (POST) del WAV resultante a una API HTTP.
+;     4. Limpieza de archivos temporales.
+;
+; Uso:
+;   Se invoca desde AMI (Asterisk Manager Interface) con una acción Originate.
+;   Los parámetros se pasan como variables:
+;     Variable: ARG1=nombre_base_del_archivo
+;     Variable: ARG2=https://api.storage.com/ruta.gsm
+;     Variable: ARG3=http://api.storage.com/upload/container_wav
+;
+; Ejemplo AMI:
+;   Variable: ARG1=audio_123
+;   Variable: ARG2=https://storage.com/audio/audio_123.gsm
+;   Variable: ARG3=https://api.server.com/upload/wav
+; ---------------------------------------------------------------------
 
 [convert-audio]
-; Estas variables ${ARG1} y ${ARG2} son pasadas por la acción AMI Originate.
-; En AMI, las pasaremos como "Variable: ARG1=/ruta.gsm,ARG2=/ruta.wav"
 
-exten => convert,1,Answer() ; Contesta o activa el canal local para ejecutar la acción
-same => n,NoOp(Iniciando conversion de ${ARG1} a ${ARG2}) ; Mensaje de log
-same => n,Set(GSM_FILE=${ARG1}) ; Almacena la ruta del archivo GSM
-same => n,Set(WAV_FILE=${ARG2}) ; Almacena la ruta del archivo WAV
+; --- 0. INICIO DE SESIÓN Y LOG ---
+exten => convert,1,Answer()                           ; Acepta el canal local para ejecución
+same => n,NoOp([CONVERT] Iniciando conversión de audio con POST...)
 
-same => n,Set(FILE=${GSM_FILE})
-same => n,Set(DESTFILE=${WAV_FILE})
-same => n,Convert(${FILE},${DESTFILE}) ; Ejecuta la transcodificación
+; --- 1. PREPARACIÓN DE VARIABLES Y RUTAS TEMPORALES ---
+same => n,Set(FILE_SRC_NAME=${ARG1})                  ; Nombre base del archivo (sin extensión)
+same => n,Set(GSM_URL=${ARG2})                        ; URL completa del archivo GSM remoto
+same => n,Set(POST_WAV_URL=${ARG3})                   ; URL destino para subir el WAV convertido
 
-same => n,NoOp(Conversion de audio finalizada.)
-same => n,Hangup() ; Cuelga o cerrar el canal local después de ejecutar la acción
+same => n,Set(LOCAL_GSM_FILE=/tmp/${FILE_SRC_NAME}.gsm) ; Archivo temporal descargado
+same => n,Set(TEMP_WAV_FILE=/tmp/${FILE_SRC_NAME}.wav)  ; Archivo WAV resultante
+
+same => n,NoOp([CONVERT] Preparando entorno temporal...)
+
+; --- 2. DESCARGA DEL ARCHIVO GSM ---
+same => n,NoOp([CONVERT] Descargando ${GSM_URL} -> ${LOCAL_GSM_FILE})
+same => n,System(wget -q -O ${LOCAL_GSM_FILE} ${GSM_URL})
+
+; --- 3. CONVERSIÓN GSM → WAV ---
+same => n,NoOp([CONVERT] Convirtiendo ${LOCAL_GSM_FILE} a ${TEMP_WAV_FILE})
+same => n,System(asterisk -rx "file convert ${LOCAL_GSM_FILE} ${TEMP_WAV_FILE}")
+
+same => n,NoOp([CONVERT] Conversión finalizada: ${TEMP_WAV_FILE})
+
+; --- 4. ENVÍO (POST) DEL ARCHIVO WAV ---
+; La API C# debe aceptar multipart/form-data con el campo 'file'.
+same => n,NoOp([CONVERT] Subiendo ${TEMP_WAV_FILE} a ${POST_WAV_URL})
+same => n,System(curl -s -X POST -F "file=@${TEMP_WAV_FILE}" ${POST_WAV_URL})
+
+; --- 5. LIMPIEZA DE ARCHIVOS TEMPORALES ---
+same => n,NoOp([CONVERT] Eliminando archivos temporales...)
+same => n,System(rm -f ${LOCAL_GSM_FILE})
+same => n,System(rm -f ${TEMP_WAV_FILE})
+
+; --- 6. FINALIZACIÓN ---
+same => n,NoOp([CONVERT] Proceso completado: descarga, conversión, envío y limpieza.)
+same => n,Hangup()
 ```
 
 > [!IMPORTANT]
