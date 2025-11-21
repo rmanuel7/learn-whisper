@@ -19,6 +19,10 @@ python -m pip --version
 
 > [!NOTE]
 > Run [`python get-pip.py`](https://packaging.python.org/en/latest/tutorials/installing-packages/#ensure-pip-setuptools-and-wheel-are-up-to-date). This will install or upgrade pip. Additionally, it will install Setuptools and wheel if they're not installed already.
+> 
+> ```coffeescript
+> python3 -m pip install --upgrade pip setuptools wheel
+> ```
 
 
 ## How to install pip for python 3 in ubuntu?
