@@ -6,8 +6,7 @@ import os
 import sys
 import logging
 import traceback
-import torch
-import json
+import torch # ¡NUEVA IMPORTACIÓN!
 
 # --- CONFIGURACIÓN ---
 # Por favor, reemplaza "TU_TOKEN_AQUI" con tu token real de Hugging Face
@@ -43,7 +42,6 @@ if __name__ == "__main__":
 
     audio = sys.argv[1].strip()
     rttm = audio.replace(".wav", ".rttm")
-    rttm_json = audio.replace(".wav", ".json")
     logger = setup_logging(audio)
     
     # 2. **SOLUCIÓN CRUCIAL 1:** Cambiar el Directorio de Trabajo (CWD)
@@ -102,20 +100,9 @@ if __name__ == "__main__":
 
     # 6. Guardar resultado RTTM y comunicar éxito
     try:
-        data_json = []
-
-        for segment, speaker in output.speaker_diarization:
-            data_json.append({ "start": segment.start:.1f, "end": segment.end:.1f, "speaker": speaker })
-
-        with open(rttm_json, "w") as f:
-            json.dump(data_json, f)
-
-        # with open(rttm, "w") as f:
-        #    diar.speaker_diarization.write_rttm(f)
-
-        logger.info(f"Resultado RTTM guardado exitosamente en: {rttm_json}")
-
-
+        with open(rttm, "w") as f:
+            diar.speaker_diarization.write_rttm(f)
+        logger.info(f"Resultado RTTM guardado exitosamente en: {rttm}")
         
         # Comunicar éxito a Asterisk
         print("SET VARIABLE DIARIZATION_STATUS \"SUCCESS\"")
