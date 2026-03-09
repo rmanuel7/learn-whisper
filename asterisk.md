@@ -304,11 +304,11 @@ The top level directories used by Asterisk can be configured in the [`asterisk.c
 **Cambiamos la** **propiedad de todos los archivos y directorios** de Asterisk para que el usuario pueda acceder a esos archivos:
 
 ```coffeescript
-sudo chown -R asterisk: /var/{lib,log,run,spool}/asterisk /usr/lib/asterisk /etc/asterisk
+sudo chown --recursive asterisk: /var/{lib,log,run,spool}/asterisk /usr/lib/asterisk /etc/asterisk
 ```
 
 ```coffeescript
-sudo chmod -R 750 /var/{lib,log,run,spool}/asterisk /usr/lib/asterisk /etc/asterisk
+sudo chmod --recursive 750 /var/{lib,log,run,spool}/asterisk /usr/lib/asterisk /etc/asterisk
 ```
 
 <br/>
