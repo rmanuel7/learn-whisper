@@ -322,7 +322,7 @@ The most common way to run Asterisk in a production environment is as a service.
 Para **iniciar Asterisk**:
 
 ```coffeescript
-sudo /etc/init.d/asterisk start
+sudo "/etc/init.d/asterisk" start
 ```
 
 > [!NOTE]
