@@ -219,14 +219,15 @@ sudo make install
 <img width="565" height="622" alt="image" src="https://github.com/user-attachments/assets/2014ce73-a970-4c76-9e1a-8bad9b9fec67" />
 
 <br/>
+<br/>
 
-Podemos instalar la documentación con:
+Podemos instalar la **documentación** con:
 
 ```coffeescript
 sudo make progdocs
 ```
 
-Para instalar los archivos genéricos de configuración*:
+Para instalar los **archivos** genéricos de **configuración**:
 
 ```coffeescript
 sudo make samples
