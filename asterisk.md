@@ -219,6 +219,20 @@ sudo make install
 <img width="565" height="622" alt="image" src="https://github.com/user-attachments/assets/2014ce73-a970-4c76-9e1a-8bad9b9fec67" />
 
 <br/>
+
+Podemos instalar la documentación con:
+
+```coffeescript
+sudo make progdocs
+```
+
+Para instalar los archivos genéricos de configuración*:
+
+```coffeescript
+sudo make samples
+```
+
+<br/>
 <br/>
 
 
@@ -279,7 +293,7 @@ sudo vim "/etc/default/asterisk"
 **Añadimos nuestro nuevo usuario a los grupos *dialout* y *audio***:
 
 ```coffeescript
-sudo usermod -a -G dialout,audio asterisk
+sudo usermod --append --groups dialout,audio asterisk
 ```
 
 ### [Directory and File Structure](https://docs.asterisk.org/Fundamentals/Directory-and-File-Structure/)
